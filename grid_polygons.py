@@ -97,32 +97,6 @@ def main():
         raise NotImplementedError
 
     print "DROP TABLE ungrouped_output;"
-
-
-    if False:
-
-        # create a table of bboxes covering the whole area
-
-
-        # insert into land_test (geom) select st_collectionextract(st_multi(st_union(case when st_within(test.box, land_polygons.the_geom) then st_multi(test.box) when st_within(land_polygons.the_geom, test.box) then st_multi(land_polygons.the_geom) when st_intersects(land_polygons.the_geom, test.box) then st_multi(st_intersection(land_polygons.the_geom, test.box)) else NULL end)), 3) as geom from land_polygons join test on (land_polygons.the_geom && test.box ) group by test.id;
-
-        # Now grid the other table with 
-        #select st_collectionextract(st_collect(case when st_within(land_polygons.the_geom, test.box) then st_multi(land_polygons.the_geom) else st_multi(st_intersection(land_polygons.the_geom, test.box)) end), 3) as geom from land_polygons join test on (land_polygons.the_geom && test.box AND st_intersects(land_polygons.the_geom, test.box)) group by test.id
-        old_query = """INSERT INTO {output_table} ({output_column})
-                    SELECT {output_column} FROM (
-                        SELECT ST_Multi(ST_Union(
-                            CASE
-                                WHEN ST_Within({input_column}, {geom}) THEN {input_column}
-                                ELSE ST_Intersection({input_column}, {geom})
-                            END
-                        )) as {output_column}
-                        FROM {input_table} WHERE {input_column} && {geom}
-                    ) AS inner_table WHERE NOT ST_IsEmpty({output_column});
-                    """.format(output_table=args.output_table, input_table=args.input_table, geom=geom, input_column=args.input_column, output_column=args.output_column)
-
-        query = query.replace("\n", "")
-        print query
-        
     print "COMMIT;"
 
 if __name__ == '__main__':
